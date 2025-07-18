@@ -43,7 +43,7 @@ const Header = () => {
               Sign In
             </Button>
             <Button className="bg-gradient-to-r from-yellow-300 via-10% to-yellow-400 hover:opacity-90 transition-smooth glow-primary">
-              Get Started
+              <Link href="/signup">Get Started</Link>
             </Button>
           </div>
 
@@ -81,8 +81,8 @@ const Header = () => {
                 >
                   Sign In
                 </Button>
-                <Button className="w-full gradient-primary hover:opacity-90 transition-smooth">
-                  Get Started
+                <Button  className="w-full gradient-primary hover:opacity-90 transition-smooth">
+                  <Link href="/signup">Get Started</Link>
                 </Button>
               </div>
             </div>
