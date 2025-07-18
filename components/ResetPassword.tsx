@@ -1,68 +1,35 @@
 "use client";
 
-import * as React from "react";
 import Link from "next/link";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EyeIcon, EyeOffIcon, LockIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { resetPasswordSchema } from "@/lib/validations/auth.schema";
+import { useState } from "react";
 
-const passwordSchema = z
-  .object({
-    password: z
-      .string()
-      .min(8, { message: "Password must be at least 8 characters" })
-      .regex(/[A-Z]/, {
-        message: "Password must contain at least one uppercase letter",
-      })
-      .regex(/[a-z]/, {
-        message: "Password must contain at least one lowercase letter",
-      })
-      .regex(/[0-9]/, { message: "Password must contain at least one number" }),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
 
-type PasswordFormValues = z.infer<typeof passwordSchema>;
+type ResetPasswordSchema = z.infer<typeof resetPasswordSchema>;
 
 const ResetPassword = () => {
-  const [isPasswordVisible, setIsPasswordVisible] = React.useState(false);
-  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
-    React.useState(false);
-  const [isSubmitted, setIsSubmitted] = React.useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const form = useForm<PasswordFormValues>({
-    resolver: zodResolver(passwordSchema),
+  const form = useForm<ResetPasswordSchema>({
+    resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
       password: "",
       confirmPassword: "",
     },
   });
 
-  function onSubmit(data: PasswordFormValues) {
+  const onSubmit = (data: ResetPasswordSchema) => {
     console.log(data);
     setIsSubmitted(true);
   }
