@@ -83,7 +83,7 @@ const Login = () => {
                                 <div className="flex items-center">
                                     <Label htmlFor="password">Password</Label>
                                     <Link
-                                    href="#"
+                                    href="/forgot-password"
                                     className="ml-auto text-sm underline-offset-4 hover:underline"
                                     >
                                     Forgot your password?
@@ -96,7 +96,7 @@ const Login = () => {
                                     </p>
                                 )}
                                 </div>
-                                <Button type="submit" className="w-full">
+                                <Button type="submit" className="w-full bg-gradient-to-r from-amber-300 via-10% to-amber-400 hover:opacity-80">
                                 Login
                                 </Button>
                             </div>

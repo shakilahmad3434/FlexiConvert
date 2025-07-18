@@ -92,7 +92,7 @@ const Signup = () => {
                         )}
                     </div>
 
-                    <Button type="submit" className="w-full">
+                    <Button type="submit" className="w-full bg-gradient-to-r from-amber-300 via-10% to-amber-400 hover:opacity-80">
                         Sign up
                     </Button>
                     </div>
