@@ -1,12 +1,10 @@
-"use client"
 import { ArrowRight, Download, Star, Users } from 'lucide-react';
 import React from 'react'
 import { Button } from '../ui/button';
 import { FileUploadZone } from '../shared/FileUploadZone';
-import { useTheme } from 'next-themes';
 
 const Hero = () => {
-    const { setTheme, theme, resolvedTheme } = useTheme()
+
     return (
     <section className="relative min-h-screen flex items-center justify-center px-4 pt-16 overflow-hidden">
       {/* Background Effects */}
@@ -16,7 +14,6 @@ const Hero = () => {
       
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left Column - Content */}
           <div className="text-center lg:text-left space-y-8">
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 glass rounded-full text-sm animate-slide-up">
@@ -57,31 +54,27 @@ const Hero = () => {
               </div>
             </div>
 
-            {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-slide-up" style={{ animationDelay: '0.3s' }}>
-              <Button size="lg" className="group bg-gradient-to-r from-amber-300 via-10% to-amber-400">
+              <Button size="lg" className="group bg-gradient-to-r from-amber-300 via-10% to-amber-400 cursor-pointer">
                 Start Converting
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
-              <Button size="lg" className="group">
+              <Button size="lg" className='cursor-pointer'>
                 View Demo
               </Button>
             </div>
 
-            {/* Trust Indicators */}
             <div className="flex flex-wrap items-center gap-6 justify-center lg:justify-start pt-4 animate-slide-up" style={{ animationDelay: '0.4s' }}>
               <span className="text-sm text-muted-foreground">Trusted by:</span>
               <div className="flex items-center gap-4">
-                <div className="px-3 py-1 glass rounded-md text-sm font-medium">Google</div>
-                <div className="px-3 py-1 glass rounded-md text-sm font-medium">Microsoft</div>
-                <div className="px-3 py-1 glass rounded-md text-sm font-medium">Adobe</div>
+                <div className="px-3 py-1 bg-black border border-black rounded-md text-sm font-medium">Google</div>
+                <div className="px-3 py-1 bg-black border border-black rounded-md text-sm font-medium">Microsoft</div>
+                <div className="px-3 py-1 bg-black border border-black rounded-md text-sm font-medium">Adobe</div>
               </div>
             </div>
           </div>
 
-          {/* Right Column - Hero Image & Upload Zone */}
           <div className="space-y-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            {/* Hero Illustration */}
             <div className="relative mb-8">
               <div className="absolute inset-0 bg-gradient-primary opacity-20 rounded-3xl blur-2xl"></div>
               <img
@@ -90,17 +83,7 @@ const Hero = () => {
                 className="relative w-full h-auto rounded-3xl glow-card animate-float"
               />
             </div>
-
-            {/* Quick Upload Zone */}
-            <div className="lg:hidden">
-              <FileUploadZone />
-            </div>
           </div>
-        </div>
-
-        {/* Desktop Upload Zone */}
-        <div className="hidden lg:block mt-20 animate-slide-up" style={{ animationDelay: '0.5s' }}>
-          <FileUploadZone />
         </div>
       </div>
 

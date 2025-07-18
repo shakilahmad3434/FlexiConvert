@@ -100,7 +100,7 @@ const Features = () => {
     return (
     <section className="py-20 px-4 relative overflow-hidden">
       {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-glow opacity-20"></div>
+      <div className="absolute inset-0 gradient-glow opacity-20"></div>
       <div className="absolute top-20 left-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl"></div>
       <div className="absolute bottom-20 right-20 w-96 h-96 bg-secondary/10 rounded-full blur-3xl"></div>
       
@@ -151,7 +151,7 @@ const Features = () => {
               Join millions of users who trust our platform for their file conversion needs.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="px-8 py-3 bg-gradient-to-r from-yellow-300 via-10% to-yellow-400 rounded-xl font-medium hover:opacity-90 transition-smooth glow-primary">
+              <button className="px-8 py-3 bg-gradient-to-r from-yellow-300 via-10% to-yellow-400 rounded-xl font-medium hover:opacity-90 transition-smooth text-black">
                 Start Converting Now
               </button>
               <button className="px-8 py-3 border border-border rounded-xl font-medium hover:bg-primary/10 transition-smooth">

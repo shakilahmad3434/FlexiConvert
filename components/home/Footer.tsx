@@ -2,6 +2,7 @@
 import React from 'react'
 import { FileType, Github, Twitter, Linkedin, Mail, ArrowUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const footerSections = [
     {
@@ -108,12 +109,12 @@ const Footer = () => {
                 <ul className="space-y-3">
                   {section.links.map((link) => (
                     <li key={link.name}>
-                      <a
+                      <Link
                         href={link.href}
                         className="text-muted-foreground hover:text-foreground transition-colors hover:translate-x-1 duration-200 inline-block"
                       >
                         {link.name}
-                      </a>
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -132,13 +133,13 @@ const Footer = () => {
               </p>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+            <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto lg:items-center">
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="px-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 min-w-[300px]"
+                className="px-4 py-1.5 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 min-w-[300px]"
               />
-              <Button className="gradient-primary hover:opacity-90 transition-smooth whitespace-nowrap">
+              <Button className="bg-gradient-to-r from-amber-300 via-10% to-amber-400 py-5 px-8 hover:opacity-80 transition-smooth whitespace-nowrap">
                 Subscribe
               </Button>
             </div>
@@ -148,7 +149,7 @@ const Footer = () => {
         {/* Bottom Section */}
         <div className="py-6 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-sm text-muted-foreground text-center sm:text-left">
-            © 2024 ConvertPro. All rights reserved. Built with ❤️ for creators worldwide.
+            © 2025 ConvertPro. All rights reserved. Built with ❤️ for creators worldwide.
           </div>
           
           <Button

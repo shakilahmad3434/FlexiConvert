@@ -100,7 +100,15 @@ export const FileUploadZone = () => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
+    <div className="w-full max-w-4xl mx-auto space-y-6 mt-20 py-10">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold mb-4">
+            <span className="bg-amber-400 bg-clip-text text-transparent">Start Your Conversion</span>
+          </h2>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            Easily transform your files into any format you need, quickly and efficiently.
+          </p>
+        </div>
       {/* Upload Zone */}
       <div
         className={`upload-zone p-12 text-center min-h-[300px] flex flex-col items-center justify-center ${
