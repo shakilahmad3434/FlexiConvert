@@ -3,27 +3,29 @@
 import Link from "next/link";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "./ui/card";
 import { Button } from "./ui/button";
-import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import Logo from "./shared/Logo";
 import { signupSchema } from "@/lib/validations/auth.schema";
+import { useState } from "react";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 
 type SignupSchema = z.infer<typeof signupSchema>;
 
 const Signup = () => {
-  const { register,  handleSubmit, formState: { errors } } = useForm<SignupSchema>({ resolver: zodResolver(signupSchema) });
+    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+    const form = useForm<SignupSchema>({ resolver: zodResolver(signupSchema), defaultValues: {name: '', email: '', password: ''} });
 
-  const onSubmit = (data: SignupSchema) => {
-    console.log("Form submitted:", data);
-    // You can call an API here
-  };
+    const onSubmit = (data: SignupSchema) => {
+        console.log("Form submitted:", data);
+    };
 
   return (
-    <div className="bg-muted flex flex-col items-center justify-center gap-6 p-6 md:p-10">
+    <div className="flex flex-col items-center justify-center gap-6 p-6 md:p-10">
       <div className="flex w-full max-w-md flex-col gap-6">
         <Link href="/" className="flex items-center gap-2 self-center font-medium">
             <Logo />
@@ -38,73 +40,87 @@ const Signup = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-                <form onSubmit={handleSubmit(onSubmit)}>
-                <div className="grid gap-6">
-                    <div className="grid gap-4">
-                    <div className="grid gap-1.5">
-                        <Label htmlFor="name">Name</Label>
-                        <Input
-                        id="name"
-                        placeholder="shakil ahmad"
-                        {...register("name")}
-                        />
-                        {errors.name && (
-                        <p className="text-sm text-red-500">
-                            {errors.name.message}
-                        </p>
-                        )}
-                    </div>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)}>
+                        <div className="grid gap-6">
+                            <div className="grid gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="name"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Name</FormLabel>
+                                            <FormControl>
+                                                <Input type="text" placeholder="shakil ahmad" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} 
+                                />
 
-                    <div className="grid gap-1.5">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                        id="email"
-                        type="email"
-                        placeholder="m@example.com"
-                        {...register("email")}
-                        />
-                        {errors.email && (
-                        <p className="text-sm text-red-500">
-                            {errors.email.message}
-                        </p>
-                        )}
-                    </div>
+                                <FormField 
+                                    control={form.control}
+                                    name="email"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Email</FormLabel>
+                                            <FormControl>
+                                                <Input type="email" placeholder="m@example.com" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
-                    <div className="grid gap-1.5">
-                        <div className="flex items-center">
-                        <Label htmlFor="password">Password</Label>
-                        <Link
-                            href="#"
-                            className="ml-auto text-sm underline-offset-4 hover:underline"
-                        >
-                            Forgot your password?
-                        </Link>
+                                <FormField 
+                                    control={form.control}
+                                    name="password"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <div className="flex items-center">
+                                                <FormLabel>Password</FormLabel>
+                                                <Link href="/forgot-password" className="ml-auto text-sm underline-offset-4 hover:underline">Forgot your password?</Link>
+                                            </div>
+                                            <div className="relative">
+                                                <FormControl>
+                                                    <Input type={isPasswordVisible ? "text" : "password"} placeholder="••••••••" {...field} />
+                                                </FormControl>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="text-muted-foreground absolute top-0 right-0 h-full px-3 py-2"
+                                                    onClick={()=> setIsPasswordVisible(!isPasswordVisible)}
+                                                    >
+                                                    {isPasswordVisible ? (
+                                                        <EyeOffIcon className="h-4 w-4" />
+                                                    ) : (
+                                                        <EyeIcon className="h-4 w-4" />
+                                                    )}
+                                                    <span className="sr-only">
+                                                        Toggle password visibility
+                                                    </span>
+                                                </Button>
+                                            </div>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <Button type="submit" className="w-full bg-gradient-to-r from-amber-300 via-10% to-amber-400 hover:opacity-80">
+                                    Sign up
+                                </Button>
+                            </div>
+
+                            <div className="text-center text-sm">
+                                Already have an account?{" "}
+                                <Link href="/login" className="underline underline-offset-4">
+                                    Login
+                                </Link>
+                            </div>
                         </div>
-                        <Input
-                        id="password"
-                        type="password"
-                        {...register("password")}
-                        />
-                        {errors.password && (
-                        <p className="text-sm text-red-500">
-                            {errors.password.message}
-                        </p>
-                        )}
-                    </div>
-
-                    <Button type="submit" className="w-full bg-gradient-to-r from-amber-300 via-10% to-amber-400 hover:opacity-80">
-                        Sign up
-                    </Button>
-                    </div>
-
-                    <div className="text-center text-sm">
-                    Already have an account?{" "}
-                    <Link href="/login" className="underline underline-offset-4">
-                        Login
-                    </Link>
-                    </div>
-                </div>
-                </form>
+                    </form>
+                </Form>
                 <div className="after:border-border relative text-center mt-5 mb-3 text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
                     <span className="bg-card text-muted-foreground relative z-10 px-2">Or continue with</span>
                 </div>
