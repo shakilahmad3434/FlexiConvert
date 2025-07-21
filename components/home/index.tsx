@@ -1,7 +1,7 @@
 import Hero from './Hero'
 import Features from './Features'
 import Formats from './Formats'
-import { FileUploadZone } from '../shared/FileUploadZone'
+import FileUploadZone from '../shared/FileUploadZone'
 
 const Home = () => {
   return (

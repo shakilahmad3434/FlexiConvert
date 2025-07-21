@@ -2,6 +2,7 @@ import { ArrowRight, Download, Star, Users } from 'lucide-react';
 import React from 'react'
 import { Button } from '../ui/button';
 import { FileUploadZone } from '../shared/FileUploadZone';
+import Link from 'next/link';
 
 const Hero = () => {
 
@@ -55,10 +56,12 @@ const Hero = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-slide-up" style={{ animationDelay: '0.3s' }}>
-              <Button size="lg" className="group bg-gradient-to-r from-amber-300 via-10% to-amber-400 cursor-pointer">
-                Start Converting
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Button>
+                <Link href="/signup" className='group'>
+                    <Button size="lg" className="group bg-gradient-to-r from-amber-300 via-10% to-amber-400 hover:opacity-80 cursor-pointer">
+                            Start Converting
+                            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Button>
+              </Link>
               <Button size="lg" className='cursor-pointer'>
                 View Demo
               </Button>

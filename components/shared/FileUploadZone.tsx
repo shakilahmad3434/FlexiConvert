@@ -1,239 +1,265 @@
-"use client"
-import React, { useCallback, useState } from 'react';
-import { Upload, FileText, Image, Video, Music, Archive, X, Check } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+'use client'
 
-interface FileItem {
-  id: string;
-  file: File;
-  progress: number;
-  status: 'uploading' | 'ready' | 'converting' | 'completed' | 'error';
+import { AlertCircle, BadgeCheckIcon, Download, FileText, Image, MoveRight, RefreshCcw, Settings, Upload, X } from "lucide-react";
+import { Button } from "../ui/button";
+import React, { useCallback, useState } from "react";
+import { Card, CardContent, CardFooter } from "../ui/card";
+import { cn } from "@/lib/utils";
+import { useDropzone } from "react-dropzone";
+import { toast } from "sonner";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select";
+import { Badge } from "../ui/badge";
+import { Progress } from "../ui/progress";
+
+
+const maxSize = parseInt(process.env.NEXT_PUBLIC_MAX_SIZE!)
+const maxFiles = parseInt(process.env.NEXT_PUBLIC_MAX_FILES!)
+const accept = {
+    'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp'],
+    'application/pdf': ['.pdf'],
+    'application/msword': ['.doc'],
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+    'audio/*': ['.mp3', '.wav', '.flac', '.aac', '.ogg'],
+    'video/*': ['.mp4', '.avi', '.mov', '.wmv', '.mkv'],
+  }
+
+const FileUploadZone = () => {
+    const [isDragActive, setIsDragActive] = useState(false);
+    const [status, setStatus] = useState('first')
+
+    const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
+
+        if (rejectedFiles.length > 0) {
+            rejectedFiles.forEach((file) => {
+                file.errors.forEach((error: any) => {
+                if (error.code === 'file-too-large') {
+                    toast.error(`File ${file.file.name} is too large. Max size is ${maxSize / 1024 / 1024}MB`);
+                } else if (error.code === 'file-invalid-type') {
+                    toast.error(`File ${file.file.name} has an invalid format`);
+                } else {
+                    toast.error(`Error with file ${file.file.name}: ${error.message}`);
+                }
+                });
+            });
+        }
+
+        if (acceptedFiles.length > 0) {
+        toast.success(`${acceptedFiles.length} file(s) added successfully`);
+        }
+  }, [maxSize]);
+
+
+  const { getRootProps, getInputProps, isDragActive: dropzoneActive } = useDropzone({
+    onDrop,
+    accept,
+    maxFiles,
+    maxSize,
+    onDragEnter: () => setIsDragActive(true),
+    onDragLeave: () => setIsDragActive(false),
+  });
+
+
+
+    return (
+        <div className="w-full max-w-4xl mx-auto space-y-6 mt-20 py-10">
+            <div className="text-center mb-16">
+                <h2 className="text-4xl font-bold mb-4">
+                    <span className="bg-amber-400 bg-clip-text text-transparent">Start Your Conversion</span>
+                </h2>
+                <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+                    Easily transform your files into any format you need, quickly and efficiently.
+                </p>
+            </div>
+
+            <Card className="w-full bg-transparent border-transparent">
+                <CardContent className="p-0">
+                    <div
+                    {...getRootProps()}
+                    className={cn(
+                        "border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-all duration-300",
+                        "hover:border-primary/50 hover:bg-primary/5",
+                        isDragActive || dropzoneActive
+                        ? "border-primary bg-primary/10"
+                        : "border-muted-foreground/25"
+                    )}
+                    >
+                    <input {...getInputProps()} />
+                    
+                        <div className="space-y-6">
+                            <div className="animate-float mx-auto h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Upload className="h-8 w-8 text-primary" />
+                            </div>
+                            
+                            <div className="space-y-2">
+                            <h3 className="text-xl font-semibold">
+                                {isDragActive || dropzoneActive ? "Drop files here" : "Upload your files"}
+                            </h3>
+                            <p className="text-muted-foreground">
+                                Drag and drop files here, or click to browse
+                            </p>
+                            </div>
+
+                            <div className="flex flex-col items-center space-y-2">
+                            <Button variant="outline" className="w-auto rounded py-5">
+                                <FileText className="mr-2 h-4 w-4" />
+                                Choose Files
+                            </Button>
+                            <div className="text-xs text-muted-foreground text-center">
+                                <p>Maximum {maxFiles} files • Up to {maxSize / 1024 / 1024}MB each</p>
+                                <p>Supports: PDF, DOC, DOCX, JPG, PNG, MP4, MP3, and more</p>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="p-6 bg-muted/30 rounded-b-lg">
+                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                        <AlertCircle className="h-4 w-4" />
+                        <span>Your files are processed securely and automatically deleted after conversion</span>
+                    </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <div className="space-y-4">
+                <h4 className="text-lg font-semibold">Your Files</h4>
+                <Card className="rounded">
+                    <CardContent className="glass rounded-xl animate-slide-up">
+                        <div className="space-y-2">
+                            <div className="border-b border-gray-800 py-3 flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="text-primary">
+                                        <Image className="w-6 h-6" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex flex-col items-start justify-between mb-1">
+                                            <p className="text-sm font-medium truncate">
+                                                1093662-hd_1280_720_30fps.mp4
+                                            </p>
+                                            <p className="text-sm font-medium truncate text-gray-600">2.62 MB</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-10">
+                                    {
+                                        status === "first" ?
+                                        <div className="flex items-center gap-2 w-full">
+                                            <p className="whitespace-nowrap">Convert to:</p>
+                                            <Select onValueChange={(v)=> console.log(v)}>
+                                                <SelectTrigger className="rounded">
+                                                    <SelectValue placeholder="Select a format" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectGroup>
+                                                    <SelectLabel>Image</SelectLabel>
+                                                    <div className="grid grid-cols-3 gap-1 px-2">
+                                                        <SelectItem value="avif">AVIF</SelectItem>
+                                                        <SelectItem value="bmp">BMP</SelectItem>
+                                                        <SelectItem value="eps">EPS</SelectItem>
+                                                        <SelectItem value="gif">GIF</SelectItem>
+                                                        <SelectItem value="ico">ICO</SelectItem>
+                                                        <SelectItem value="jpg">JPG</SelectItem>
+                                                        <SelectItem value="odd">ODD</SelectItem>
+                                                        <SelectItem value="png">PNG</SelectItem>
+                                                        <SelectItem value="ps">PS</SelectItem>
+                                                        <SelectItem value="psd">PSD</SelectItem>
+                                                        <SelectItem value="tiff">TIFF</SelectItem>
+                                                        <SelectItem value="webp">WEBP</SelectItem>
+                                                    </div>
+                                                    </SelectGroup>
+
+                                                    <SelectGroup>
+                                                    <SelectLabel>Document</SelectLabel>
+                                                    <div className="grid grid-cols-3 gap-1 px-2">
+                                                        <SelectItem value="pdf">PDF</SelectItem>
+                                                        <SelectItem value="doc">DOC</SelectItem>
+                                                        <SelectItem value="docx">DOCX</SelectItem>
+                                                        <SelectItem value="word">WORD</SelectItem>
+                                                    </div>
+                                                    </SelectGroup>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        :
+                                        <p className="whitespace-nowrap space-x-2">
+                                            <span>Convert to</span>
+                                            <Badge variant='destructive'>PS</Badge>
+                                        </p>
+                                    }
+                                    {status !== "first" && (
+                                        <div>
+                                            {status === "second" ? (
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant="secondary" className="uppercase bg-amber-500 text-white dark:bg-amber-600 rounded">
+                                                <RefreshCcw />
+                                                Waiting
+                                                </Badge>
+                                                <span>Uploading</span>
+                                            </div>
+                                            ) : (
+                                            <div>
+                                                <Badge variant="secondary" className="uppercase bg-green-500 text-white dark:bg-green-600">
+                                                <BadgeCheckIcon />
+                                                Finished
+                                                </Badge>
+                                            </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    <div className="flex items-center gap-2 w-full">
+                                        {
+                                            status !== "first" ? (
+                                                    status === "second"
+                                                    ?
+                                                        <Progress value={30} className="w-24" />
+                                                    :
+                                                    <Button
+                                                        className="text-success border-success hover:bg-success/10 bg-gradient-to-r from-amber-400 via-10% to-amber-500 hover:opacity-75 rounded cursor-pointer"
+                                                    >
+                                                        <Download />
+                                                        Download
+                                                    </Button>
+                                            )
+                                            :
+                                            <Button
+                                            variant="outline"
+                                            className="text-muted-foreground hover:text-destructive w-10 h-10 rounded-full"
+                                            >
+                                            <Settings className="w-6 h-6" />
+                                        </Button>
+                                        }
+                                        
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="text-muted-foreground hover:text-destructive w-10 h-10 rounded-full"
+                                            >
+                                            <X className="w-6 h-6" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+                    <CardFooter>
+                        <div className="flex justify-between items-center w-full">
+                            <div>
+                                <p className="text-sm">2 files selected — 5.24 MB total</p>
+                                <p className="text-sm text-gray-500">Est. time: 10–12 sec</p>
+                            </div>
+                            <div>
+                                <Button className="rounded group flex items-center gap-2 transition-all bg-gradient-to-r from-amber-400 via-10% to-amber-500 hover:opacity-75 text-white cursor-pointer" size="lg">
+                                    <span>Convert</span>
+                                    <MoveRight className="transform transition-transform duration-200 group-hover:translate-x-1" />
+                                </Button>
+                            </div>
+                        </div>
+                    </CardFooter>
+                </Card>
+            </div>
+        </div>
+    )
 }
 
-export const FileUploadZone = () => {
-  const [files, setFiles] = useState<FileItem[]>([]);
-  const [isDragOver, setIsDragOver] = useState(false);
-
-  const getFileIcon = (type: string) => {
-    if (type.startsWith('image/')) return <Image className="w-6 h-6" />;
-    if (type.startsWith('video/')) return <Video className="w-6 h-6" />;
-    if (type.startsWith('audio/')) return <Music className="w-6 h-6" />;
-    if (type.includes('zip') || type.includes('rar')) return <Archive className="w-6 h-6" />;
-    return <FileText className="w-6 h-6" />;
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    addFiles(droppedFiles);
-  }, []);
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const selectedFiles = Array.from(e.target.files);
-      addFiles(selectedFiles);
-    }
-  };
-
-  const addFiles = (newFiles: File[]) => {
-    const fileItems: FileItem[] = newFiles.map(file => ({
-      id: Math.random().toString(36).substr(2, 9),
-      file,
-      progress: 0,
-      status: 'uploading'
-    }));
-
-    setFiles(prev => [...prev, ...fileItems]);
-
-    // Simulate upload progress
-    fileItems.forEach((fileItem) => {
-      const interval = setInterval(() => {
-        setFiles(prev => prev.map(f => {
-          if (f.id === fileItem.id) {
-            const newProgress = f.progress + Math.random() * 20;
-            if (newProgress >= 100) {
-              clearInterval(interval);
-              return { ...f, progress: 100, status: 'ready' };
-            }
-            return { ...f, progress: newProgress };
-          }
-          return f;
-        }));
-      }, 200);
-    });
-  };
-
-  const removeFile = (id: string) => {
-    setFiles(prev => prev.filter(f => f.id !== id));
-  };
-
-  const convertFile = (id: string) => {
-    setFiles(prev => prev.map(f => 
-      f.id === id ? { ...f, status: 'converting', progress: 0 } : f
-    ));
-
-    // Simulate conversion
-    const interval = setInterval(() => {
-      setFiles(prev => prev.map(f => {
-        if (f.id === id && f.status === 'converting') {
-          const newProgress = f.progress + Math.random() * 15;
-          if (newProgress >= 100) {
-            clearInterval(interval);
-            return { ...f, progress: 100, status: 'completed' };
-          }
-          return { ...f, progress: newProgress };
-        }
-        return f;
-      }));
-    }, 300);
-  };
-
-  return (
-    <div className="w-full max-w-4xl mx-auto space-y-6 mt-20 py-10">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">
-            <span className="bg-amber-400 bg-clip-text text-transparent">Start Your Conversion</span>
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Easily transform your files into any format you need, quickly and efficiently.
-          </p>
-        </div>
-      {/* Upload Zone */}
-      <div
-        className={`upload-zone p-12 text-center min-h-[300px] flex flex-col items-center justify-center ${
-          isDragOver ? 'dragover' : ''
-        }`}
-        onDrop={handleDrop}
-        onDragOver={(e) => e.preventDefault()}
-        onDragEnter={() => setIsDragOver(true)}
-        onDragLeave={() => setIsDragOver(false)}
-      >
-        <div className="animate-float mb-6">
-          <Upload className="w-16 h-16 text-primary mx-auto mb-4" />
-        </div>
-        
-        <h3 className="text-2xl font-bold mb-2 gradient-primary bg-clip-text text-transparent">
-          Drop files here to convert
-        </h3>
-        <p className="text-muted-foreground mb-6 max-w-md">
-          Support for images, videos, documents, and audio files. 
-          Drag & drop or click to select files.
-        </p>
-        
-        <div className="space-x-4">
-          <Button 
-            variant="default" 
-            size="lg"
-            className="gradient-primary hover:opacity-90 transition-smooth glow-primary"
-            onClick={() => document.getElementById('file-input')?.click()}
-          >
-            Select Files
-          </Button>
-          <Button 
-            variant="outline" 
-            size="lg"
-            className="glass hover:bg-primary/10 transition-smooth"
-          >
-            Browse Formats
-          </Button>
-        </div>
-        
-        <input
-          id="file-input"
-          type="file"
-          multiple
-          className="hidden"
-          onChange={handleFileSelect}
-          accept="*/*"
-        />
-      </div>
-
-      {/* File List */}
-      {files.length > 0 && (
-        <div className="space-y-4">
-          <h4 className="text-lg font-semibold">Your Files</h4>
-          <div className="space-y-3">
-            {files.map((fileItem) => (
-              <div key={fileItem.id} className="glass rounded-xl p-4 animate-slide-up">
-                <div className="flex items-center gap-4">
-                  <div className="text-primary">
-                    {getFileIcon(fileItem.file.type)}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm font-medium truncate">
-                        {fileItem.file.name}
-                      </p>
-                      <span className="text-xs text-muted-foreground">
-                        {formatFileSize(fileItem.file.size)}
-                      </span>
-                    </div>
-                    
-                    {fileItem.status !== 'ready' && fileItem.status !== 'completed' && (
-                      <div className="w-full">
-                        <Progress value={fileItem.progress} className="h-2" />
-                        <p className="text-xs text-muted-foreground mt-1 capitalize">
-                          {fileItem.status}... {Math.round(fileItem.progress)}%
-                        </p>
-                      </div>
-                    )}
-                    
-                    {fileItem.status === 'completed' && (
-                      <div className="flex items-center gap-2 text-success text-sm">
-                        <Check className="w-4 h-4" />
-                        Conversion completed
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    {fileItem.status === 'ready' && (
-                      <Button
-                        size="sm"
-                        className="gradient-accent"
-                        onClick={() => convertFile(fileItem.id)}
-                      >
-                        Convert
-                      </Button>
-                    )}
-                    
-                    {fileItem.status === 'completed' && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-success border-success hover:bg-success/10"
-                      >
-                        Download
-                      </Button>
-                    )}
-                    
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-muted-foreground hover:text-destructive"
-                      onClick={() => removeFile(fileItem.id)}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
+export default FileUploadZone;
