@@ -12,6 +12,8 @@ import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
 import { formatBytes, useFileConversion } from "@/lib/file-utils";
 import { getFileIcon } from "./FileIcon";
+import { getConversionFormats } from "@/lib/file-format";
+import FormatSelector from "./FormatSelector";
 
 
 const maxSize = parseInt(process.env.NEXT_PUBLIC_MAX_SIZE!)
@@ -27,9 +29,9 @@ const accept = {
 
 const FileUploadZone = () => {
     const [isDragActive, setIsDragActive] = useState(false);
-    const [status, setStatus] = useState('first')
     const { files, addFiles, removeFile, updateFileStatus, clearHistory } = useFileConversion();
 console.log(files)
+
     const onFilesAdded = (newFiles: File[]) => {
         addFiles(newFiles);
     }
@@ -149,49 +151,16 @@ console.log(files)
                                             <p className="text-sm font-medium w-64 truncate">
                                                 {file.name}
                                             </p>
-                                            <p className="text-sm font-medium truncate text-gray-600">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                                            <p className="text-sm font-medium truncate text-gray-600">{formatBytes(file.size)}</p>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-10">
                                     {
-                                        status === "first" ?
+                                        file.status === "pending" ?
                                         <div className="flex items-center gap-2 w-full">
                                             <p className="whitespace-nowrap">Convert to:</p>
-                                            <Select onValueChange={(v)=> console.log(v)}>
-                                                <SelectTrigger className="rounded">
-                                                    <SelectValue placeholder="Select a format" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectGroup>
-                                                    <SelectLabel>Image</SelectLabel>
-                                                    <div className="grid grid-cols-3 gap-1 px-2">
-                                                        <SelectItem value="avif">AVIF</SelectItem>
-                                                        <SelectItem value="bmp">BMP</SelectItem>
-                                                        <SelectItem value="eps">EPS</SelectItem>
-                                                        <SelectItem value="gif">GIF</SelectItem>
-                                                        <SelectItem value="ico">ICO</SelectItem>
-                                                        <SelectItem value="jpg">JPG</SelectItem>
-                                                        <SelectItem value="odd">ODD</SelectItem>
-                                                        <SelectItem value="png">PNG</SelectItem>
-                                                        <SelectItem value="ps">PS</SelectItem>
-                                                        <SelectItem value="psd">PSD</SelectItem>
-                                                        <SelectItem value="tiff">TIFF</SelectItem>
-                                                        <SelectItem value="webp">WEBP</SelectItem>
-                                                    </div>
-                                                    </SelectGroup>
-
-                                                    <SelectGroup>
-                                                    <SelectLabel>Document</SelectLabel>
-                                                    <div className="grid grid-cols-3 gap-1 px-2">
-                                                        <SelectItem value="pdf">PDF</SelectItem>
-                                                        <SelectItem value="doc">DOC</SelectItem>
-                                                        <SelectItem value="docx">DOCX</SelectItem>
-                                                        <SelectItem value="word">WORD</SelectItem>
-                                                    </div>
-                                                    </SelectGroup>
-                                                </SelectContent>
-                                            </Select>
+                                            <FormatSelector fileExtension={file.originalFormat}/>
                                         </div>
                                         :
                                         <p className="whitespace-nowrap space-x-2">
@@ -199,7 +168,7 @@ console.log(files)
                                             <Badge variant='destructive'>PS</Badge>
                                         </p>
                                     }
-                                    {status !== "first" && (
+                                    {file.status !== "pending" && (
                                         <div>
                                             {status === "second" ? (
                                             <div className="flex items-center gap-2">
@@ -222,7 +191,7 @@ console.log(files)
 
                                     <div className="flex items-center gap-2 w-full">
                                         {
-                                            status !== "first" ? (
+                                            file.status !== "pending" ? (
                                                     status === "second"
                                                     ?
                                                         <Progress value={30} className="w-24" />
