@@ -44,7 +44,7 @@ export function useFileConversion() {
       name: file.name,
       size: file.size,
       originalFormat: file.name.split('.').pop()?.toLowerCase() || 'unknown',
-      targetFormat: 'pdf', // Default target format
+      targetFormat: 'None', // Default target format
       status: 'pending' as ConversionStatus,
       progress: 0,
       timestamp: Date.now(),
@@ -61,6 +61,14 @@ export function useFileConversion() {
         : file
     ));
   }, []);
+
+  const updateTargetFormat = useCallback((id: string, format: string) => {
+    setFiles(prev => prev.map(file =>
+        file.id === id
+            ? {...file, targetFormat: format}
+            : file
+    ))
+  }, [])
 
   const removeFile = useCallback((id: string) => {
     setFiles(prev => prev.filter(file => file.id !== id));
@@ -81,6 +89,7 @@ export function useFileConversion() {
     removeFile,
     clearHistory,
     getFilesByStatus,
+    updateTargetFormat
   };
 }
 

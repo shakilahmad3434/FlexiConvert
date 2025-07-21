@@ -7,13 +7,14 @@ import { Card, CardContent, CardFooter } from "../ui/card";
 import { cn } from "@/lib/utils";
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
-import { formatBytes, useFileConversion } from "@/lib/file-utils";
+import { formatBytes, getFileCategory, useFileConversion } from "@/lib/file-utils";
 import { getFileIcon } from "./FileIcon";
-import { getConversionFormats } from "@/lib/file-format";
 import FormatSelector from "./FormatSelector";
+import { ConversionFile } from "@/types/conversion";
+import {v4 as uuidv4} from "uuid"
+import { httpRequest } from "@/lib/httpRequest";
 
 
 const maxSize = parseInt(process.env.NEXT_PUBLIC_MAX_SIZE!)
@@ -29,12 +30,8 @@ const accept = {
 
 const FileUploadZone = () => {
     const [isDragActive, setIsDragActive] = useState(false);
-    const { files, addFiles, removeFile, updateFileStatus, clearHistory } = useFileConversion();
-console.log(files)
+    const { files, addFiles, removeFile, updateTargetFormat, updateFileStatus, clearHistory } = useFileConversion();
 
-    const onFilesAdded = (newFiles: File[]) => {
-        addFiles(newFiles);
-    }
 
     const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
 
@@ -42,7 +39,7 @@ console.log(files)
             rejectedFiles.forEach((file) => {
                 file.errors.forEach((error: any) => {
                 if (error.code === 'file-too-large') {
-                    toast.error(`File ${file.file.name} is too large. Max size is ${maxSize / 1024 / 1024}MB`);
+                    toast.error(`File ${file.file.name} is too large. Max size is ${formatBytes(maxSize)}`);
                 } else if (error.code === 'file-invalid-type') {
                     toast.error(`File ${file.file.name} has an invalid format`);
                 } else {
@@ -53,10 +50,10 @@ console.log(files)
         }
 
         if (acceptedFiles.length > 0) {
-            onFilesAdded(acceptedFiles);
+            addFiles(acceptedFiles);
             toast.success(`${acceptedFiles.length} file(s) added successfully`);
         }
-  }, [onFilesAdded, maxSize]);
+  }, [addFiles, maxSize]);
 
 
   const { getRootProps, getInputProps, isDragActive: dropzoneActive } = useDropzone({
@@ -67,6 +64,53 @@ console.log(files)
     onDragEnter: () => setIsDragActive(true),
     onDragLeave: () => setIsDragActive(false),
   });
+
+  // check targeted format is select or not
+  const checkTargetedFormat = files.filter((file)=> file.targetFormat === "None")
+
+  // convert the whole file in the same time
+  const fileConversion = async (totalFiles: ConversionFile[]) => {
+    if(checkTargetedFormat.length > 0)
+        return toast.error("Please select targeted format")
+
+    for(const file of totalFiles){
+        updateFileStatus(file.id, 'processing', 0);
+
+        const category = getFileCategory(file.originalFormat);
+
+        const path = `${category}/${uuidv4()}.${file.originalFormat}`;
+        const payload = {path, type: file.file.type};
+        const options = {
+            headers: {
+                'Content-Type': file.file.type
+            }
+        }
+
+        try {
+            const { data } = await httpRequest.post('/upload', payload);
+            await httpRequest.put(data.url, file.file, options)
+            console.log(path);
+        } catch (err) {
+            if (err instanceof Error) {
+                toast.error(err.message);
+            }
+        }
+
+    }
+
+    console.log(totalFiles)
+  }
+
+  const handleFormatChange = (fileId: string, newFormat: string) => {
+    updateTargetFormat(fileId, newFormat)
+    // In a real app, this would update the file's target format
+    toast.info(`Target format changed to ${newFormat.toUpperCase()}`);
+  };
+
+  const handleDownload = (file: ConversionFile) => {
+    // In a real app, this would trigger file download
+    toast.success(`Downloading ${file.name}`);
+  };
 
   // get total file size
   const totalFileSize = files.reduce((accum, currentVal) => accum + currentVal.size, 0);
@@ -116,7 +160,7 @@ console.log(files)
                                 Choose Files
                             </Button>
                             <div className="text-xs text-muted-foreground text-center">
-                                <p>Maximum {maxFiles} files • Up to {maxSize / 1024 / 1024}MB each</p>
+                                <p>Maximum {maxFiles} files • Up to {formatBytes(maxSize)} each</p>
                                 <p>Supports: PDF, DOC, DOCX, JPG, PNG, MP4, MP3, and more</p>
                             </div>
                             </div>
@@ -160,20 +204,20 @@ console.log(files)
                                         file.status === "pending" ?
                                         <div className="flex items-center gap-2 w-full">
                                             <p className="whitespace-nowrap">Convert to:</p>
-                                            <FormatSelector fileExtension={file.originalFormat}/>
+                                            <FormatSelector fileExtension={file.originalFormat} handleFormatChange={handleFormatChange} id={file.id} />
                                         </div>
                                         :
                                         <p className="whitespace-nowrap space-x-2">
                                             <span>Convert to</span>
-                                            <Badge variant='destructive'>PS</Badge>
+                                            <Badge variant='destructive' className="uppercase">{file.targetFormat}</Badge>
                                         </p>
                                     }
                                     {file.status !== "pending" && (
                                         <div>
-                                            {status === "second" ? (
+                                            {file.status === "processing" ? (
                                             <div className="flex items-center gap-2">
                                                 <Badge variant="secondary" className="uppercase bg-amber-500 text-white dark:bg-amber-600 rounded">
-                                                <RefreshCcw />
+                                                <RefreshCcw className="animate-spin" />
                                                 Waiting
                                                 </Badge>
                                                 <span>Uploading</span>
@@ -192,7 +236,7 @@ console.log(files)
                                     <div className="flex items-center gap-2 w-full">
                                         {
                                             file.status !== "pending" ? (
-                                                    status === "second"
+                                                    file.status === "processing"
                                                     ?
                                                         <Progress value={30} className="w-24" />
                                                     :
@@ -234,7 +278,7 @@ console.log(files)
                                 <p className="text-sm text-gray-500">Est. time: 10–12 sec</p>
                             </div>
                             <div>
-                                <Button className="rounded group flex items-center gap-2 transition-all bg-gradient-to-r from-amber-400 via-10% to-amber-500 hover:opacity-75 text-white cursor-pointer" size="lg">
+                                <Button onClick={()=> fileConversion(files)} className={`rounded group flex items-center gap-2 transition-all ${checkTargetedFormat.length > 0 ? "bg-gradient-to-r from-gray-500 via-20% to-gray-600" : "bg-gradient-to-r from-amber-400 via-10% to-amber-500"} hover:opacity-75 text-white cursor-pointer`} size="lg">
                                     <span>Convert</span>
                                     <MoveRight className="transform transition-transform duration-200 group-hover:translate-x-1" />
                                 </Button>

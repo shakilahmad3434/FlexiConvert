@@ -1,3 +1,4 @@
+import { FC } from "react";
 import {
   Select,
   SelectContent,
@@ -9,11 +10,17 @@ import {
 } from "../ui/select";
 import { getConversionFormats } from "@/lib/file-format";
 
-const FormatSelector = ({ fileExtension }: { fileExtension: string }) => {
+interface FormatSelectorInterface {
+    fileExtension: string
+    handleFormatChange: (fileId: string, newFormat: string) => void
+    id: string
+}
+
+const FormatSelector: FC<FormatSelectorInterface> = ({ fileExtension, handleFormatChange, id }) => {
   const availableFormats = getConversionFormats(fileExtension);
 
   return (
-    <Select onValueChange={(v) => console.log(v)}>
+    <Select onValueChange={(newFormat) => handleFormatChange(id, newFormat)}>
       <SelectTrigger className="rounded">
         <SelectValue placeholder="Select a format" />
       </SelectTrigger>
