@@ -1,3 +1,9 @@
+'use client'
+
+import { ConversionFile, ConversionStatus } from '@/types/conversion';
+import { useState, useCallback } from 'react';
+
+
 export const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -27,4 +33,63 @@ export const getFileCategory = (extension: string) => {
   }
 
   return 'unknown';
+}
+
+export function useFileConversion() {
+  const [files, setFiles] = useState<ConversionFile[]>([]);
+
+  const addFiles = useCallback((newFiles: File[]) => {
+    const conversionFiles: ConversionFile[] = newFiles.map(file => ({
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      name: file.name,
+      size: file.size,
+      originalFormat: file.name.split('.').pop()?.toLowerCase() || 'unknown',
+      targetFormat: 'pdf', // Default target format
+      status: 'pending' as ConversionStatus,
+      progress: 0,
+      timestamp: Date.now(),
+      file,
+    }));
+
+    setFiles(prev => [...prev, ...conversionFiles]);
+  }, []);
+
+  const updateFileStatus = useCallback((id: string, status: ConversionStatus, progress = 0) => {
+    setFiles(prev => prev.map(file => 
+      file.id === id 
+        ? { ...file, status, progress, timestamp: status === 'completed' ? Date.now() : file.timestamp }
+        : file
+    ));
+  }, []);
+
+  const removeFile = useCallback((id: string) => {
+    setFiles(prev => prev.filter(file => file.id !== id));
+  }, []);
+
+  const clearHistory = useCallback(() => {
+    setFiles(prev => prev.filter(file => file.status !== 'completed'));
+  }, []);
+
+  const getFilesByStatus = useCallback((status: ConversionStatus) => {
+    return files.filter(file => file.status === status);
+  }, [files]);
+
+  return {
+    files,
+    addFiles,
+    updateFileStatus,
+    removeFile,
+    clearHistory,
+    getFilesByStatus,
+  };
+}
+
+export function formatBytes(bytes: number): string {
+    if (bytes === 0) return "0 B";
+
+    const units = ["B", "KB", "MB", "GB", "TB"];
+    const index = Math.floor(Math.log(bytes) / Math.log(1024));
+    const value = bytes / Math.pow(1024, index);
+
+    return `${value.toFixed(2)} ${units[index]}`;
 }

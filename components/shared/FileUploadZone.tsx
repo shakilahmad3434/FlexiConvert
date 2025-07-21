@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertCircle, BadgeCheckIcon, Download, FileText, Image, MoveRight, RefreshCcw, Settings, Upload, X } from "lucide-react";
+import { AlertCircle, BadgeCheckIcon, Download, FileText, MoveRight, RefreshCcw, Settings, Upload, X } from "lucide-react";
 import { Button } from "../ui/button";
 import React, { useCallback, useState } from "react";
 import { Card, CardContent, CardFooter } from "../ui/card";
@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
+import { formatBytes, useFileConversion } from "@/lib/file-utils";
+import { getFileIcon } from "./FileIcon";
 
 
 const maxSize = parseInt(process.env.NEXT_PUBLIC_MAX_SIZE!)
@@ -26,6 +28,11 @@ const accept = {
 const FileUploadZone = () => {
     const [isDragActive, setIsDragActive] = useState(false);
     const [status, setStatus] = useState('first')
+    const { files, addFiles, removeFile, updateFileStatus, clearHistory } = useFileConversion();
+console.log(files)
+    const onFilesAdded = (newFiles: File[]) => {
+        addFiles(newFiles);
+    }
 
     const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
 
@@ -44,9 +51,10 @@ const FileUploadZone = () => {
         }
 
         if (acceptedFiles.length > 0) {
-        toast.success(`${acceptedFiles.length} file(s) added successfully`);
+            onFilesAdded(acceptedFiles);
+            toast.success(`${acceptedFiles.length} file(s) added successfully`);
         }
-  }, [maxSize]);
+  }, [onFilesAdded, maxSize]);
 
 
   const { getRootProps, getInputProps, isDragActive: dropzoneActive } = useDropzone({
@@ -58,8 +66,9 @@ const FileUploadZone = () => {
     onDragLeave: () => setIsDragActive(false),
   });
 
-
-
+  // get total file size
+  const totalFileSize = files.reduce((accum, currentVal) => accum + currentVal.size, 0);
+ 
     return (
         <div className="w-full max-w-4xl mx-auto space-y-6 mt-20 py-10">
             <div className="text-center mb-16">
@@ -121,22 +130,26 @@ const FileUploadZone = () => {
                 </CardContent>
             </Card>
 
-            <div className="space-y-4">
+            {
+                files.length > 0 &&
+                <div className="space-y-4">
                 <h4 className="text-lg font-semibold">Your Files</h4>
                 <Card className="rounded">
                     <CardContent className="glass rounded-xl animate-slide-up">
                         <div className="space-y-2">
-                            <div className="border-b border-gray-800 py-3 flex items-center justify-between gap-4">
+                            {
+                                files.map((file) => (
+                                    <div key={file.id} className="border-b border-gray-800 py-3 flex items-center justify-between gap-4">
                                 <div className="flex items-center gap-3">
                                     <div className="text-primary">
-                                        <Image className="w-6 h-6" />
+                                        {getFileIcon(file.file.type)}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex flex-col items-start justify-between mb-1">
-                                            <p className="text-sm font-medium truncate">
-                                                1093662-hd_1280_720_30fps.mp4
+                                            <p className="text-sm font-medium w-64 truncate">
+                                                {file.name}
                                             </p>
-                                            <p className="text-sm font-medium truncate text-gray-600">2.62 MB</p>
+                                            <p className="text-sm font-medium truncate text-gray-600">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                                         </div>
                                     </div>
                                 </div>
@@ -234,18 +247,21 @@ const FileUploadZone = () => {
                                             size="sm"
                                             variant="ghost"
                                             className="text-muted-foreground hover:text-destructive w-10 h-10 rounded-full"
+                                            onClick={()=> removeFile(file.id)}
                                             >
                                             <X className="w-6 h-6" />
                                         </Button>
                                     </div>
                                 </div>
                             </div>
+                                ))
+                            }
                         </div>
                     </CardContent>
                     <CardFooter>
                         <div className="flex justify-between items-center w-full">
                             <div>
-                                <p className="text-sm">2 files selected — 5.24 MB total</p>
+                                <p className="text-sm">{files.length} files selected — {formatBytes(totalFileSize)} total</p>
                                 <p className="text-sm text-gray-500">Est. time: 10–12 sec</p>
                             </div>
                             <div>
@@ -258,6 +274,7 @@ const FileUploadZone = () => {
                     </CardFooter>
                 </Card>
             </div>
+            }
         </div>
     )
 }
