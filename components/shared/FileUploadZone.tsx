@@ -15,6 +15,7 @@ import FormatSelector from "./FormatSelector";
 import { ConversionFile } from "@/types/conversion";
 import {v4 as uuidv4} from "uuid"
 import { httpRequest } from "@/lib/httpRequest";
+import { AxiosProgressEvent } from "axios";
 
 
 const maxSize = parseInt(process.env.NEXT_PUBLIC_MAX_SIZE!)
@@ -30,11 +31,11 @@ const accept = {
 
 const FileUploadZone = () => {
     const [isDragActive, setIsDragActive] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [convertedFileUrl, setConvertedFileUrl] = useState<string | null>(null);
     const { files, addFiles, removeFile, updateTargetFormat, updateFileStatus, clearHistory } = useFileConversion();
 
-
     const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
-
         if (rejectedFiles.length > 0) {
             rejectedFiles.forEach((file) => {
                 file.errors.forEach((error: any) => {
@@ -48,7 +49,6 @@ const FileUploadZone = () => {
                 });
             });
         }
-
         if (acceptedFiles.length > 0) {
             addFiles(acceptedFiles);
             toast.success(`${acceptedFiles.length} file(s) added successfully`);
@@ -67,6 +67,7 @@ const FileUploadZone = () => {
 
   // check targeted format is select or not
   const checkTargetedFormat = files.filter((file)=> file.targetFormat === "None")
+  const checkFileStatus = files.filter((file)=> file.status === "pending")
 
   // convert the whole file in the same time
   const fileConversion = async (totalFiles: ConversionFile[]) => {
@@ -74,6 +75,10 @@ const FileUploadZone = () => {
         return toast.error("Please select targeted format")
 
     for(const file of totalFiles){
+        if(file.status === "completed")
+            continue
+
+        console.log("HIHIHI")
         updateFileStatus(file.id, 'processing', 0);
 
         const category = getFileCategory(file.originalFormat);
@@ -81,24 +86,45 @@ const FileUploadZone = () => {
         const path = `${category}/${uuidv4()}.${file.originalFormat}`;
         const payload = {path, type: file.file.type};
         const options = {
-            headers: {
-                'Content-Type': file.file.type
+            headers: { 'Content-Type': file.file.type },
+            onUploadProgress: (progressEvent: AxiosProgressEvent) => {
+                if(progressEvent.total){
+                    const percent = Math.round((progressEvent.loaded * 50) / progressEvent.total);
+                    updateFileStatus(file.id, 'processing', percent);
+                }
             }
-        }
+        };
 
         try {
+            setLoading(true)
             const { data } = await httpRequest.post('/upload', payload);
-            await httpRequest.put(data.url, file.file, options)
-            console.log(path);
-        } catch (err) {
-            if (err instanceof Error) {
-                toast.error(err.message);
+            await httpRequest.put(data.url, file.file, options);
+            updateFileStatus(file.id, 'processing', 50);
+
+            const conversionPayload = {
+                category,
+                path,
+                format: file.targetFormat
             }
+            updateFileStatus(file.id, 'processing', 75);
+
+            const {data: convertedFileUrl} = await httpRequest.post('/conversion', conversionPayload);
+
+             toast.success('Conversion successful');
+            setConvertedFileUrl(convertedFileUrl.convertedFileUrl);
+            updateFileStatus(file.id, 'completed', 100);
+        } catch (err) {
+             updateFileStatus(file.id, 'error', 0);
+            if (err instanceof Error) {
+                toast.error(err.message || "something went wrong");
+            }
+        } finally{
+            setLoading(false)
         }
+        console.log(files)
 
     }
 
-    console.log(totalFiles)
   }
 
   const handleFormatChange = (fileId: string, newFormat: string) => {
@@ -107,9 +133,25 @@ const FileUploadZone = () => {
     toast.info(`Target format changed to ${newFormat.toUpperCase()}`);
   };
 
-  const handleDownload = (file: ConversionFile) => {
-    // In a real app, this would trigger file download
-    toast.success(`Downloading ${file.name}`);
+  const handleDownload = async (file: ConversionFile) => {
+    const name = `${file.name.split('.')[0]}.${file.targetFormat}`;
+    if(!convertedFileUrl)
+        return toast.error('Conversion file not generated!')
+
+    const response = await fetch(convertedFileUrl)
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob)
+
+    const a = document.createElement('a')
+    a.href = url
+    a.download = name
+    document.body.appendChild(a);
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url);
+    
+    toast.success(`Downloading ${name}`);
+    console.log(files)
   };
 
   // get total file size
@@ -238,9 +280,10 @@ const FileUploadZone = () => {
                                             file.status !== "pending" ? (
                                                     file.status === "processing"
                                                     ?
-                                                        <Progress value={30} className="w-24" />
+                                                        <Progress value={file.progress} className="w-24" />
                                                     :
                                                     <Button
+                                                        onClick={()=> handleDownload(file)}
                                                         className="text-success border-success hover:bg-success/10 bg-gradient-to-r from-amber-400 via-10% to-amber-500 hover:opacity-75 rounded cursor-pointer"
                                                     >
                                                         <Download />
@@ -275,14 +318,17 @@ const FileUploadZone = () => {
                         <div className="flex justify-between items-center w-full">
                             <div>
                                 <p className="text-sm">{files.length} files selected — {formatBytes(totalFileSize)} total</p>
-                                <p className="text-sm text-gray-500">Est. time: 10–12 sec</p>
                             </div>
-                            <div>
-                                <Button onClick={()=> fileConversion(files)} className={`rounded group flex items-center gap-2 transition-all ${checkTargetedFormat.length > 0 ? "bg-gradient-to-r from-gray-500 via-20% to-gray-600" : "bg-gradient-to-r from-amber-400 via-10% to-amber-500"} hover:opacity-75 text-white cursor-pointer`} size="lg">
-                                    <span>Convert</span>
-                                    <MoveRight className="transform transition-transform duration-200 group-hover:translate-x-1" />
-                                </Button>
-                            </div>
+                            {
+                                checkFileStatus.length > 0 &&
+                                <div>
+                                    <Button onClick={()=> fileConversion(files)} className={`rounded group flex items-center gap-2 transition-all ${checkTargetedFormat.length > 0 ? "bg-gradient-to-r from-gray-500 via-20% to-gray-600" : "bg-gradient-to-r from-amber-400 via-10% to-amber-500"} hover:opacity-75 text-white cursor-pointer`} size="lg">
+                                        
+                                        {loading ? <span>Loading...</span> : <span>Convert</span>}
+                                        <MoveRight className="transform transition-transform duration-200 group-hover:translate-x-1" />
+                                    </Button>
+                                </div>
+                            }
                         </div>
                     </CardFooter>
                 </Card>

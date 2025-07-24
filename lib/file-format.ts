@@ -18,7 +18,7 @@ type FormatGroups = {
 
 const conversionMap: Record<string, FormatGroups> = {
   png: {
-    image: ["jpg", "jpeg", "webp", "gif", "tiff", "ico", "bmp", "avif", "svg", "eps", "psd"],
+    image: ["png", "jpg", "jpeg", "webp", "gif", "tiff", "ico", "bmp", "avif", "svg", "eps", "psd", "icns", "odd", "ps"],
     document: ["pdf"],
   },
   jpg: {
